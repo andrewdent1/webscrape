@@ -1,7 +1,20 @@
 import requests
 import time
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-API_KEY = AIzaSyCfIwSY4iS4-9g_NGerNlVcnZQu3MBks7A
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/spreadsheets",
+         "https://www.googleapis.com/auth/drive.file", "https://www.googleapis.com/auth/drive"]
+
+creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
+client = gspread.authorize(creds)
+
+spreadsheet = client.open("SCWD - Scraping")
+sheet = spreadsheet.sheet1
+
+sheet.update("A1", [["Name", "Address", "Phone Number", "Website"]])
+
+API_KEY = 'AIzaSyCfIwSY4iS4-9g_NGerNlVcnZQu3MBks7A'
 
 location = '28.0836,-80.6081'
 radius = 10000
@@ -18,6 +31,7 @@ def get_business_details(place_id):
     details_response = requests.get(details_url)
     return details_response.json().get('result', {})
 
+row = 2 
 for business in businesses:
     name = business.get('name')
     address = business.get('vicinity')
@@ -27,10 +41,7 @@ for business in businesses:
     phone_number = details.get('formatted_phone_number', 'N/A')
     website = details.get('website', 'N/A')
 
-    print(f"Name: {name}")
-    print(f"Address: {address}")
-    print(f"Phone Number: {phone_number}")
-    print(f"Website: {website}")
-    print("=" * 40)
+    sheet.update(f"A{row}", [[name, address, phone_number, website]])
+    row += 1
     
     time.sleep(1)
